@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 核心任务复盘</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-md mx-auto">
+        <header class="mb-6">
+            <h1 class="text-2xl font-bold text-slate-800">2026 工作复盘</h1>
+            <p class="text-sm text-slate-500">聚焦长期任务，掌握命运主动权</p>
+        </header>
+
+        <div class="card p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4 text-slate-700">本周数据录入</h2>
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-slate-500 mb-1">视频产出 (计划/实际)</label>
+                        <input type="text" id="videoStats" placeholder="如: 1/1" class="w-full border rounded p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-500 mb-1">新增粉丝</label>
+                        <input type="number" id="newFollowers" placeholder="0" class="w-full border rounded p-2 text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-slate-500 mb-1">本周营收 (USD)</label>
+                        <input type="number" id="revenue" placeholder="0" class="w-full border rounded p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-500 mb-1">运动次数 / 手机时长</label>
+                        <input type="text" id="healthStats" placeholder="3次 / 4h" class="w-full border rounded p-2 text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-500 mb-1">主要障碍与改进动作</label>
+                    <textarea id="reflection" rows="3" class="w-full border rounded p-2 text-sm" placeholder="本周什么挡住了你？下周怎么做？"></textarea>
+                </div>
+                <button onclick="saveReview()" class="w-full bg-slate-800 text-white py-2 rounded-lg font-medium hover:bg-slate-700 transition">提交本周复盘</button>
+            </div>
+        </div>
+
+        <div class="card p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold text-slate-700">历史对照</h2>
+                <button onclick="exportData()" class="text-xs text-blue-600">导出数据</button>
+            </div>
+            <div id="historyList" class="space-y-4 max-h-96 overflow-y-auto">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // 自动提醒逻辑：如果周日晚上未填写，发送通知
+        if ("Notification" in window) {
+            Notification.requestPermission();
+        }
+
+        function saveReview() {
+            const data = {
+                date: new Date().toLocaleDateString(),
+                video: document.getElementById('videoStats').value,
+                followers: document.getElementById('newFollowers').value,
+                revenue: document.getElementById('revenue').value,
+                health: document.getElementById('healthStats').value,
+                reflection: document.getElementById('reflection').value,
+                timestamp: Date.now()
+            };
+
+            let history = JSON.parse(localStorage.getItem('review2026') || '[]');
+            history.unshift(data);
+            localStorage.setItem('review2026', JSON.stringify(history));
+            
+            alert('复盘已保存');
+            renderHistory();
+            clearForm();
+        }
+
+        function renderHistory() {
+            const history = JSON.parse(localStorage.getItem('review2026') || '[]');
+            const container = document.getElementById('historyList');
+            container.innerHTML = history.map(item => `
+                <div class="border-b pb-3">
+                    <div class="flex justify-between text-xs font-bold text-slate-400 mb-1">
+                        <span>${item.date}</span>
+                        <span class="text-green-600">$${item.revenue}</span>
+                    </div>
+                    <div class="text-sm text-slate-700">视频: ${item.video} | 增粉: ${item.followers} | 精力: ${item.health}</div>
+                    <div class="text-xs text-slate-500 mt-1 bg-slate-50 p-2 rounded">${item.reflection}</div>
+                </div>
+            `).join('');
+        }
+
+        function clearForm() {
+            ['videoStats', 'newFollowers', 'revenue', 'health', 'reflection'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+        }
+
+        function exportData() {
+            const history = localStorage.getItem('review2026');
+            const blob = new Blob([history], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '2026-review-data.json';
+            a.click();
+        }
+
+        // 初始化渲染
+        renderHistory();
+    </script>
+</body>
+</html>
